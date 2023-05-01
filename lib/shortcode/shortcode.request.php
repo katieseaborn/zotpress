@@ -514,7 +514,7 @@ function Zotpress_shortcode_request( $checkcache = false )
 						/* chicago-author-date */ $item->bib = str_ireplace( htmlentities($item->data->url."."), "", $item->bib ); // Note the period
 						/* APA */ $item->bib = str_ireplace( htmlentities($item->data->url), "", $item->bib );
                         // Fix APA citation by removing the last part of the "Retrieved from" text
-                        $item->bib = preg_replace('/(Retrieved \w+ \d+, \d+)(, from)/','${1}',$item->bib);
+                        $item->bib = preg_replace('/(Retrieved \w+ \d+, \d+)(, from)/','${1}.',$item->bib);
 						$item->bib = str_ireplace( " Retrieved from ", "", $item->bib );
 						$item->bib = str_ireplace( " Available from: ", "", $item->bib );
 
