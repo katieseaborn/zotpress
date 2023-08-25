@@ -115,6 +115,7 @@ function Zotpress_func( $atts )
             'conferencePaper',
             'thesis',
             'report',
+	    'preprint',
             'encyclopediaArticle',
             'newspaperArticle',
             'magazineArticle',
