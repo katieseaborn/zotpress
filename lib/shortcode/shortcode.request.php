@@ -513,6 +513,8 @@ function Zotpress_shortcode_request( $checkcache = false )
 						// REVIEW: Does this account for all citation styles?
 						/* chicago-author-date */ $item->bib = str_ireplace( htmlentities($item->data->url."."), "", $item->bib ); // Note the period
 						/* APA */ $item->bib = str_ireplace( htmlentities($item->data->url), "", $item->bib );
+                        // Fix APA citation by removing the last part of the "Retrieved from" text
+                        $item->bib = preg_replace('/(Retrieved \w+ \d+, \d+)(, from)/','${1}.',$item->bib);
 						$item->bib = str_ireplace( " Retrieved from ", "", $item->bib );
 						$item->bib = str_ireplace( " Available from: ", "", $item->bib );
 
@@ -570,7 +572,8 @@ function Zotpress_shortcode_request( $checkcache = false )
 							"\xE2\x80\x9E" => '"',	// U+201E double low-9 quotation mark
 							"\xE2\x80\x9F" => '"',	// U+201F double high-reversed-9 quotation mark
 							"\xE2\x80\xB9" => "'",	// U+2039 single left-pointing angle quotation mark
-							"\xE2\x80\xBA" => "'"	// U+203A single right-pointing angle quotation mark
+							"\xE2\x80\xBA" => "'",	// U+203A single right-pointing angle quotation mark
+							"\xE2\x80\xAF" => " "   // U+206F nominal digit shapes
 						);
 						$chr = array_keys( $chr_map );
 						$rpl = array_values( $chr_map );
