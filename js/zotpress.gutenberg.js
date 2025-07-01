@@ -64,7 +64,7 @@ jQuery(document).ready( function()
         {
             // Generate the shortcode
             var zpBiblioShortcode = window.zpGenerateShortcodeString( $scButton.data("sctype") );
-            console.log(zpBiblioShortcode);
+            // console.log(zpBiblioShortcode);
 
             // Create the shortcode string
             let shortcodeRichText = wp.richText.create({

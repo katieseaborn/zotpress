@@ -2,13 +2,13 @@
 Contributors: kseaborn
 Plugin Name: Zotpress
 Plugin URI: http://katieseaborn.com/plugins/
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=5HQ8FXAXS9MUQ
-Tags: zotero, zotpress, citation manager, citations, citation, cite, citing, bibliography, bibliographies, reference, referencing, references, reference list, reference manager, academic, academic blogging, academia, scholar, scholarly, scholarly blogging, cv, curriculum vitae, resume, publish, publication, publications
+Donate link: https://paypal.me/zotpress
+Tags: zotero, citation manager, bibliography, academic blogging, publications
 Author URI: http://katieseaborn.com/
 Author: Katie Seaborn
 Requires at least: 3.5
-Tested up to: 6.1.1
-Stable tag: 7.3.2
+Tested up to: 6.8
+Stable tag: 7.4.1
 License: Apache2.0
 
 Zotpress displays your Zotero citations on WordPress.
@@ -26,7 +26,7 @@ Zotpress displays your Zotero citations on WordPress.
 
 Compatible with Firefox, Safari, Chrome, and IE9. Made with jQuery, jQuery UI, jQuery doTimeout, Live Query, OAuth, and [Open Library](https://openlibrary.org/ "Open Library").
 
-Special thanks to Joe Alberts for substantial contributions to the code, comprehensive testing, and design ideation. Thanks also to contributors Christopher Cheung, Jason S., Chris Wentzloff, and Karljürgen Feuerherm (@feuerherm) for their code contributions and guidance. Finally, my sincere gratitude goes out to all who have donated in support of this plugin.
+Special thanks to Joe Alberts for substantial contributions to the code, comprehensive testing, and design ideation. Thanks also to contributors Jeremy Varnham (@jvarn13), Christopher Cheung, Jason S., Chris Wentzloff, Karljürgen Feuerherm (@feuerherm), Mark Dingemanse (@codeispoetry), Jörg Mechnich (jmechnich@github), Tomas Risberg, @ericcorbett2, and @timtom for their code contributions, testing, and guidance. Finally, my sincere gratitude goes out to all who have donated in support of this plugin.
 
 Please note that this plugin is on semi-hiatus, with updates expected about 1-3 times a year.
 
@@ -72,9 +72,106 @@ The F.A.Q. can be found on the "Help" page of every Zotpress installation. If yo
 
 == Changelog ==
 
+= 7.4.1 =
+
+* Fixed metabox accounts issue.
+* Added sanitization for RIS files (cite).
+* Fixed abstract/note encoding issue.
+
+= 7.4 =
+
+* Revised plugin following WordPress check.
+* Overhauled download and cite functionality.
+* Added license to zotpress.php.
+* Updated deprecated load_plugin_textdomain parameter.
+* Removed backup language files (.po~, .pot~).
+* Removed redundant core file (jquery-1.5.2.min.js).
+* Sanitized, escaped, and validated the WordPress way.
+* Otherwise modernized the plugin.
+
+= 7.3.15 =
+
+* Reactivated the plugin. [7.4 note: WordPress check required.]
+* Fixed the autocomplete issue for the library search bar.
+
+= 7.3.14 =
+
+* Added notice about roles and privileges.
+* Added notice about updating and cache.
+* Added classes for DOI and updating.
+* Added APA+ style processing update by @timtom.
+* Fixed shortcode processing issue with the style attribute.
+
+= 7.3.13 =
+
+* Fixed shortcode error.
+* Fixed default collection bug with library shortcode.
+* Fixed security issue with role access.
+
+= 7.3.12 =
+
+* Fixed shortcode error.
+
+= 7.3.11 =
+
+* Fixed shortcode security issue.
+
+= 7.3.10 =
+
+* Fixed shortcode security issues.
+* Refined shortcode attribute processing code.
+* Fixed request limit bug.
+* Various code refinements.
+
+= 7.3.9 = 
+
+* Fixed security issue.
+* Fixed search bar bugs.
+* Added direct access prevention (thanks to jmechnich@github).
+* Added fix for countable issue (thanks to Tomas Risberg and @ericcorbett2).
+
+= 7.3.8 =
+
+* Fixed database security issues.
+
+= 7.3.7 =
+
+* Fixed numeric in-text sorting bug.
+* Fixed Zotpress_change_timeout() bug.
+* Fixed in-text notes bug.
+* Added support for in-text non-contiguous page numbers.
+
+= 7.3.6 =
+
+* Fixed duplicates bug.
+* Fixed cache issue.
+* Refined search bar.
+
+= 7.3.5.1 =
+
+* Fixed $tempAuthor, $tempItemDate, and $tempItemYear bugs.
+* Added support for item type preprint.
+
+= 7.3.5 = 
+
+* Fixed security bug.
+* Fixed "limit" bug related to assuming is_dropdown is true.
+* Fixed disambiguation.
+* Optimized bib and in-text loading.
+
+= 7.3.4 =
+
+* Fixed OAuth vulnerability and simplified authentication procedure.
+* Fixed in-text date ID.
+* Fixed cite URL, broken due to api_user_id.
+
+= 7.3.3 =
+
+* Fixed limit attribute issues in PHP 8.
+
 = 7.3.2 =
 
-* Added support for PHP 8 (tested in PHP 8.0.8), with thanks to K.G. Feuerherm (@kfeuerherm) and @codeispoetry.
+* Added support for PHP 8 (tested in PHP 8.0.8), with thanks to K.G. Feuerherm (@kfeuerherm) and Mark Dingemanse (@codeispoetry).
 
 = 7.3.1.2 =
 
@@ -271,7 +368,7 @@ The F.A.Q. can be found on the "Help" page of every Zotpress installation. If yo
 
 = 6.1.3 =
 
-* Fixed security issue with zp_get_account().
+* Fixed security issue with zotpress_get_account().
 * New! "style" attribute for searchbar.
 * Updated widget account selection and fixed retrieval error.
 * Minor image and code style updates.
@@ -397,7 +494,7 @@ The F.A.Q. can be found on the "Help" page of every Zotpress installation. If yo
 * Fixed item import bugs related to quotes and empty queries.
 * Thanks to @mlwk for a thorough, 2+ level nested collections fix.
 * Thanks to Joe Alberts for fixing the permission denied error reporting.
-* Added support for "month-month year" format to zp_date_format.
+* Added support for "month-month year" format to zotpress_date_format.
 
 = 5.4.2 =
 
@@ -461,7 +558,7 @@ The F.A.Q. can be found on the "Help" page of every Zotpress installation. If yo
 
 = 5.2.8.1 =
 
-* Fixed zp_get_year warning messages.
+* Fixed zotpress_get_year warning messages.
 
 = 5.2.8 =
 
@@ -853,6 +950,10 @@ The F.A.Q. can be found on the "Help" page of every Zotpress installation. If yo
 * Zotpress makes its debut.
 
 == Upgrade Notice ==
+
+= 7.3.4 =
+
+Fixed vulnerability related to optional OAuth authentication procedure.
 
 = 7.3.2 =
 

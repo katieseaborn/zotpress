@@ -1,5 +1,3 @@
-
-
 /* START OF BASIC ZOTPRESS CSS */
 
 div#zp-Zotpress select {
@@ -575,6 +573,25 @@ div#zp-Icon img {
     width: 32px;
 }
 
+div.zp-Nav-Access {
+    float: right;
+    display: flex;
+    padding-top: 0.75em;
+}
+div.zp-Nav-Access .accessible-by {
+    display: block;
+    padding: 0.25rem;
+    font: italic 400 0.8rem/1.2rem "Georgia", serif;
+}
+div.zp-Nav-Access .access-level {
+    border: 1px solid #ccc;
+    border-radius: 1rem;
+    margin-left: 0.25rem;
+    font-size: 0.8rem;
+    display: block;
+    padding: 0.25rem 0.5rem;
+}
+
 /* END TABS */
 
 
@@ -1090,6 +1107,10 @@ div#zp-Zotpress form#zp-Image div.zp-Success p {
 
 
 /* START OF HIDDEN URL CSS */
+
+.ZP_ATTR {
+    display: none;
+}
 
 span#ZOTPRESS_PLUGIN_URL {
     display: none;

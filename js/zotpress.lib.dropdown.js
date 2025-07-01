@@ -1,22 +1,19 @@
 jQuery(document).ready(function()
 {
-	///////////////////////////////////////////////
-	//
-	//   ZOTPRESS LIBRARY DROPDOWN
-	//
-	///////////////////////////////////////////////
+	///////////////////////////////////
+	//                               //
+	//   ZOTPRESS LIBRARY DROPDOWN   //
+	//                               //
+	///////////////////////////////////
 
+	// TODO: Like the searchbar, doesn't update display right away after updating
 	// TODO: notes, abstract
 
-	// if ( jQuery(".zp-Browse-Collections-Select").length > 0 )
 	if ( jQuery(".zp-Browse").length > 0 )
 	{
 		// Go through each instance
-		// jQuery(".zp-Browse").each( function(l)
 		for (let l = 0; l < window.zpBrowseList.length; ++l)
 		{
-			// var zpThisLib = jQuery(".zp-Browse-Collections-Select", jQuery(this)).parents().eq(3); // zp-Browse
-			// var zpThisLib = jQuery(this); // zp-Browse
 			var zpThisLib = jQuery("#"+window.zpBrowseList[l].id); // zp-Browse
 
 			var zpThisLibProps = {
@@ -46,6 +43,7 @@ jQuery(document).ready(function()
 					zpThisLibProps.zpCollectionId = zpThisLibProps.zpTopLevel;
 			}
 			if ( jQuery(".ZP_URLWRAP", zpThisLib).length > 0 ) zpThisLibProps.zpURLWrap = jQuery(".ZP_URLWRAP", zpThisLib).text();
+			var zpUpdateNeeded = false; if ( jQuery(".ZP_UPDATENEEDED", zpThisLib).text().trim().length > 0 && jQuery(".ZP_UPDATENEEDED", zpThisLib).text() == "true" ) zpUpdateNeeded = true;
 
 			// Handle no browse bar
 			var browsebar = true; if ( jQuery(".ZP_BROWSEBAR", zpThisLib).text() == "" ) browsebar = false;
@@ -59,7 +57,7 @@ jQuery(document).ready(function()
 			// Otherwise, get items
 			zplib_get_items ( l, zpThisLibProps, zpThisLib, 0, 0, false );
 
-		// }); // each
+			console.log('---');
 		}
 	} // Zotpress DropDown Library
 
@@ -79,6 +77,7 @@ jQuery(document).ready(function()
           });
 		}
 	}
+
 
   	// Get list of collections
 	function zplib_get_collections ( l, zpThisLibProps, zpThisLib, request_start, request_last, update )
@@ -138,7 +137,7 @@ jQuery(document).ready(function()
 					// else
 					// 	jQuery("select.zp-Browse-Collections-Select", zpThisLib)
 					// 		.append( "<option value='blank' class='blank'>Default Collection</option>\n" );
-
+// console.log('test', jQuery(".ZP_COLLECTION_NAME", zpThisLib).text());
 				if ( zp_collections != "0"
 						&& zp_collections.data.length > 0
 						&& zp_collections.data != "0" )
@@ -180,7 +179,7 @@ jQuery(document).ready(function()
 			},
 			error: function(jqXHR)
 			{
-				console.log("Error for zplib_get_collections(): ", jqXHR.statusText);
+				console.log("zp: error for zplib_get_collections(): ", jqXHR.statusText);
 			},
 			complete: function( jqXHRr, textStatus )　{}
 		});
@@ -268,7 +267,7 @@ jQuery(document).ready(function()
 			},
 			error: function(jqXHR)
 			{
-				console.log("Error for zplib_get_tags(): ", jqXHR.statusText);
+				console.log("zp: error for zplib_get_tags(): ", jqXHR.statusText);
 			},
 			complete: function( jqXHRr, textStatus ) {}
 		});
@@ -278,6 +277,9 @@ jQuery(document).ready(function()
 	// Get list items
 	function zplib_get_items ( i, zpThisLibProps, zpThisLib, request_start, request_last, update )
 	{
+		console.log('zp: calling zplib_get_items with update check?', update);
+		console.log('zp: is an update needed?', zpUpdateNeeded);
+
 		// Set parameter defaults
 		if ( typeof(request_start) === "undefined" || request_start == "false" || request_start == "" )
 			request_start = 0;
@@ -320,6 +322,7 @@ jQuery(document).ready(function()
 				'order': jQuery(".ZP_ORDER", zpThisLib).text(),
 
 				'update': update,
+				'request_update': zpUpdateNeeded,
 				'request_start': request_start,
 				'request_last': request_last,
 				'zpShortcode_nonce': zpShortcodeAJAX.zpShortcode_nonce
@@ -330,6 +333,12 @@ jQuery(document).ready(function()
 			success: function(data)
 			{
 				var zp_items = jQuery.parseJSON( data );
+								
+				// 7.4: Major change to passing and parsing bib HTML
+				jQuery.each( zp_items.data, function (i, ic) {
+					var ic_decode = new DOMParser().parseFromString(ic.bib, "text/html");
+					zp_items.data[i].bib = ic_decode.documentElement.textContent;
+				});
 
 				// Remove cached bib before adding updates
 				if ( update === false )
@@ -455,47 +464,48 @@ jQuery(document).ready(function()
 							window.zpBrowseList[i].paginate(zpThisLibProps.zpItemsFlag, true);
 						zpThisLibProps.zpItemsFlag = false;
 
-						// Update the paging
-						if ( request_start == 0
-								&& zp_items.meta.request_last > 0 )
-						{
+						// // Update the paging
+						// if ( request_start == 0
+						// 		&& zp_items.meta.request_last > 0 )
+						// {
 							// Update the width of the inner paging element
 							// jQuery(".zpSearchResultsPaging", zpThisLib).width( jQuery(".zpSearchResultsPaging a", zpThisLib).length * 50 + "px" );
 
-							// Add a scroller, if doesn't exist
-							if ( jQuery(".zpSearchResultsPagingScroller", zpThisLib).length == 0 )
-							{
-								// Update the width of the crop
-								// NOTE: Based on five page numbers shown
-								// jQuery(".zpSearchResultsPagingCrop", zpThisLib).width( jQuery(".zpSearchResultsPaging a.selected", zpThisLib).outerWidth() * 5 );
+							// 7.3.9: Moved to zotpress.lib.js, since applies to searchbar
+							// // Add a scroller, if doesn't exist
+							// if ( jQuery(".zpSearchResultsPagingScroller", zpThisLib).length == 0 )
+							// {
+							// 	// Update the width of the crop
+							// 	// NOTE: Based on five page numbers shown
+							// 	// jQuery(".zpSearchResultsPagingCrop", zpThisLib).width( jQuery(".zpSearchResultsPaging a.selected", zpThisLib).outerWidth() * 5 );
 
-								// Add the scroller
-								jQuery(".zpSearchResultsPagingContainerInner", zpThisLib)
-									.append( '<div class="zpSearchResultsPagingScroller"><span class="zpSearchResultsPagingBack">&#8249;</span><span class="zpSearchResultsPagingForward">&#8250;</span></div>' );
+							// 	// Add the scroller
+							// 	jQuery(".zpSearchResultsPagingContainerInner", zpThisLib)
+							// 		.append( '<div class="zpSearchResultsPagingScroller"><span class="zpSearchResultsPagingBack">&#8249;</span><span class="zpSearchResultsPagingForward">&#8250;</span></div>' );
 
-								// Add event handler for "back"
-								jQuery(".zpSearchResultsPagingContainer", zpThisLib).on( 'click', '.zpSearchResultsPagingBack', function()
-								{
-									var leftPos = parseInt( jQuery(".zpSearchResultsPaging", zpThisLib).css('left') );
-									var shiftW = parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css('width')) + ( parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css("border-left-width")) * 2 );
+							// 	// Add event handler for "back"
+							// 	jQuery(".zpSearchResultsPagingContainer", zpThisLib).on( 'click', '.zpSearchResultsPagingBack', function()
+							// 	{
+							// 		var leftPos = parseInt( jQuery(".zpSearchResultsPaging", zpThisLib).css('left') );
+							// 		var shiftW = parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css('width')) + ( parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css("border-left-width")) * 2 );
 
-									// Don't go too far forward/right = past zpSearchResultsPaging.width
-									if ( leftPos != 0 )
-										jQuery(".zpSearchResultsPaging", zpThisLib).css('left', leftPos+shiftW+'px');
-								});
+							// 		// Don't go too far forward/right = past zpSearchResultsPaging.width
+							// 		if ( leftPos != 0 )
+							// 			jQuery(".zpSearchResultsPaging", zpThisLib).css('left', leftPos+shiftW+'px');
+							// 	});
 
-								// Add event handler for "forward"
-								jQuery(".zpSearchResultsPagingContainer", zpThisLib).on( 'click', '.zpSearchResultsPagingForward', function()
-								{
-									var leftPos = parseInt( jQuery(".zpSearchResultsPaging", zpThisLib).css('left') );
-									var shiftW = parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css('width')) + ( parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css("border-left-width")) * 2 );
+							// 	// Add event handler for "forward"
+							// 	jQuery(".zpSearchResultsPagingContainer", zpThisLib).on( 'click', '.zpSearchResultsPagingForward', function()
+							// 	{
+							// 		var leftPos = parseInt( jQuery(".zpSearchResultsPaging", zpThisLib).css('left') );
+							// 		var shiftW = parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css('width')) + ( parseInt(jQuery(".zpSearchResultsPaging a.selected", zpThisLib).css("border-left-width")) * 2 );
 
-									// Don't go too far back/left = past 0
-									if ( ( leftPos * -1 ) < ( jQuery(".zpSearchResultsPaging", zpThisLib).width() - 50 ) )
-										jQuery(".zpSearchResultsPaging", zpThisLib).css('left', leftPos-shiftW+'px');
-								});
-							}
-						} // Update pagination
+							// 		// Don't go too far back/left = past 0
+							// 		if ( ( leftPos * -1 ) < ( jQuery(".zpSearchResultsPaging", zpThisLib).width() - 50 ) )
+							// 			jQuery(".zpSearchResultsPaging", zpThisLib).css('left', leftPos-shiftW+'px');
+							// 	});
+							// }
+						// } // Update pagination
 
                         // If numeric, update numbers
                         zp_relabel_numbers(zpThisLib);
@@ -512,14 +522,27 @@ jQuery(document).ready(function()
 						jQuery(".zp-List", zpThisLib).removeClass("loading");
 						jQuery(".zp-List", zpThisLib).find(".zp_display_progress").remove();
 
-						// Check for updates
-						if ( ! jQuery(".zp-List", zpThisLib).hasClass("updating") )
+						// Check for updates, if needed:
+						if ( zp_items.updateneeded )
 						{
-							// Parameters: request_start, request_last, update
+							console.log("zp: update needed");
+
+							zpUpdateNeeded = true;
+							// zplib_get_items ( i, zpThisLibProps, zpThisLib, request_start, request_last, update )
 							zplib_get_items ( i, zpThisLibProps, zpThisLib, 0, 0, true );
+							// zplib_get_items ( 0, 0, $instance, params, true );
 						}
+
+						// // Check for updates
+						// if ( ! jQuery(".zp-List", zpThisLib).hasClass("updating") )
+						// {
+						// 	// Parameters: request_start, request_last, update
+						// 	zplib_get_items ( i, zpThisLibProps, zpThisLib, 0, 0, true );
+						// }
 						else // If none, then re/sort and re/number
 						{
+							zpUpdateNeeded = false;
+
 							var sortby = jQuery(".ZP_SORTBY", zpThisLib).text();
 							var orderby = jQuery(".ZP_ORDER", zpThisLib).text();
 

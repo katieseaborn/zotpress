@@ -1,5 +1,7 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 // INSTALL -----------------------------------------------------------------------------------------
 
     function Zotpress_install( $taskType="install" )
@@ -15,9 +17,12 @@
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 
-		// REMOVE OLD DATABASES AND CHECKS - since 6.0
+        // +----------------------------------+
+        // | Remove old databases and options |
+        // +----------------------------------+
+
         // CHANGED (7.3): We don't want to delete everything when updating,
-        // so a task type (install or update) check is added
+        // so a task type (install or update) check was added.
 
         if ( $taskType == "install" )
         {
@@ -64,16 +69,14 @@
         } // taskType check
 
 
-        // ZOTERO ACCOUNTS TABLE
+        // +-----------------------+
+        // | Zotero accounts table |
+        // +-----------------------+
 
-		/**
-		 * For each table, the basic check is:
-		 *
-		 * If the table version option doesn't exist, OR
-		 * If the table version is not the same as the update version (vars defined above)
-		 *
-		 * Then add/update the table and add/update the option
-		 */
+		// For each table, the basic check is:
+		// - If the table version option doesn't exist, OR
+		// - If the table version is not the same as the update version (vars defined above)
+		// Then add/update the table and add/update the option
 
         if ( ! get_option("Zotpress_main_db_version")
                 || get_option("Zotpress_main_db_version") != $Zotpress_main_db_version
@@ -97,7 +100,9 @@
         }
 
 
-        // OAUTH TABLE
+        // +-------------+
+        // | OAuth table |
+        // +-------------+
 
         if ( ! get_option("Zotpress_oauth_db_version")
                 || get_option("Zotpress_oauth_db_version") != $Zotpress_oauth_db_version
@@ -121,8 +126,9 @@
         }
 
 
-
-        // ZOTERO ITEM IMAGES TABLE
+        // +--------------+
+        // | Images table |
+        // +--------------+
 
         if ( ! get_option("Zotpress_zoteroItemImages_db_version")
                 || get_option("Zotpress_zoteroItemImages_db_version") != $Zotpress_zoteroItemImages_db_version
@@ -145,7 +151,9 @@
         }
 
 
-        // ZOTERO CACHE TABLE
+        // +-------------+
+        // | Cache table |
+        // +-------------+
 
         if ( ! get_option("Zotpress_cache_version")
 				|| get_option("Zotpress_cache_version") != $Zotpress_cache_version

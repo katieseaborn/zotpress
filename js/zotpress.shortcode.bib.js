@@ -6,10 +6,15 @@ jQuery(document).ready(function()
 	//							 //
 	///////////////////////////////
 
+	// TO REVIEW AFTER CUSTOMIZING FOR ASPIRE LAB:
+	// - Use of the JSON cache
+
 	if ( jQuery(".zp-Zotpress-Bib").length > 0 )
 	{
 		var zp_collections = {};
+		var zp_totalItems = 0;
 
+		// Capture the metadata for each bibliography:
 		jQuery(".zp-Zotpress-Bib").each( function( index, instance )
 		{
 			var $instance = jQuery(instance);
@@ -35,83 +40,128 @@ jQuery(document).ready(function()
 			zp_params.zpTarget = false; if ( jQuery(".ZP_TARGET", $instance).text().trim().length > 0 ) zp_params.zpTarget = true;
 			zp_params.zpURLWrap = false; if ( jQuery(".ZP_URLWRAP", $instance).text().trim().length > 0 ) zp_params.zpURLWrap = jQuery(".ZP_URLWRAP", $instance).text();
 			zp_params.zpHighlight = false; if ( jQuery(".ZP_HIGHLIGHT", $instance).text().trim().length > 0 ) zp_params.zpHighlight = jQuery(".ZP_HIGHLIGHT", $instance).text();
+			
+			// zp_params.zpUsedCache = false; if ( jQuery(".ZP_USED_CACHE", $instance).text().trim().length > 0 && jQuery(".ZP_USED_CACHE", $instance).text() == "true" ) zp_params.zpUsedCache = true;
+			zp_params.zpUpdateNeeded = false; if ( jQuery(".ZP_UPDATENEEDED", $instance).text().trim().length > 0 && jQuery(".ZP_UPDATENEEDED", $instance).text() == "true" ) zp_params.zpUpdateNeeded = true;
+			zp_params.zpJSON = false; if ( jQuery(".ZP_JSON", $instance).text().trim().length > 0 ) zp_params.zpJSON = jQuery(".ZP_JSON", $instance).text().trim();
 
 			zp_params.zpForceNumsCount = 1;
 			zp_params.zpBibIndex = index;
 
-			// Deal with multiples
-			// Order of priority: collections, tags, authors, years
-			// Filters (dealt with on shortcode.request.php): tags?, authors, years
-			if ( zp_params.zpCollectionId
-					&& zp_params.zpCollectionId.indexOf(',') != -1 )
+			// TEST:
+			// SUPER IMPORTANT LOGIC
+			$fromScratch = true;
+
+			if ( ! jQuery(".ZP_JSON", $instance).text().trim().length > 0 )
 			{
-				zp_collections[index] = zp_params.zpCollectionId.split(',');
-
-				// Set the initial collection
-				// var currentCollection = zp_collections[0];
-				zp_params.zpCollectionId = zp_collections[index][0];
-
-				zp_get_items ( 0, 0, $instance, zp_params, false );
-
-				// jQuery.each( zp_collections, function (i, collection)
-				// {
-				// 	zp_params.zpCollectionId = collection;
-				// 	zp_get_items ( 0, 0, $instance, zp_params, false ); // Get cached items first
-				// });
+				// zp_get_items ( 0, 0, $instance, zp_params, false );
+				$fromScratch = false;
 			}
-			else
-			{
-				// Inclusive tags (treat exclusive normally)
-				if ( zp_params.zpTagId && zp_params.zpInclusive == true && zp_params.zpTagId.indexOf(",") != -1 )
-				{
-					var tempTags = zp_params.zpTagId.split(",");
 
-					jQuery.each( tempTags, function (i, tag)
-					{
-						zp_params.zpTagId = tag;
-						zp_get_items ( 0, 0, $instance, zp_params, false ); // Get cached items first
-					});
+
+			// else // Use cache
+			// {
+				// First, get encoded/serialized JSON data from PHP:
+				var zp_items = JSON.parse(decodeURIComponent(zp_params.zpJSON));
+				
+				// Then (re)format:
+				zp_bib_reformat( $instance, zp_items, zp_params );
+				console.log('---');
+
+				// Second, check for updates and update, if needed:
+				// TEST: Big changes
+
+				// Deal with multiples:
+				// Order of priority: collections, tags, authors, years
+				// Filters (dealt with on shortcode.request.php): tags?, authors, years
+				if ( zp_params.zpCollectionId
+						&& zp_params.zpCollectionId.indexOf(',') != -1 )
+				{
+					zp_collections[index] = zp_params.zpCollectionId.split(',');
+
+					// Set the initial collection:
+					// var currentCollection = zp_collections[0];
+					zp_params.zpCollectionId = zp_collections[index][0];
+
+					// params: request_start, request_last, $instance, params, update
+					// TEST: changed update = true
+					zp_get_items ( 0, 0, $instance, zp_params, $fromScratch );
 				}
 				else
 				{
-					if ( zp_params.zpAuthor && zp_params.zpAuthor.indexOf(",") != -1 )
+					// Handle inclusive tags (treat exclusive normally):
+					if ( zp_params.zpTagId 
+							&& zp_params.zpInclusive == true 
+							&& zp_params.zpTagId.indexOf(",") != -1 )
 					{
-						var tempAuthors = zp_params.zpAuthor.split(",");
+						var tempTags = zp_params.zpTagId.split(",");
 
-						if ( zp_params.zpInclusive == true )
+						jQuery.each( tempTags, function (i, tag)
 						{
-							jQuery.each( tempAuthors, function (i, author)
-							{
-								zp_params.zpAuthor = author;
-								zp_get_items ( 0, 0, $instance, zp_params, false );
-							});
-						}
-						else // exclusive
-						{
-							zp_get_items ( 0, 0, $instance, zp_params, false );
-						}
+							zp_params.zpTagId = tag;
+
+							// params: request_start, request_last, $instance, params, update
+							// TEST: changed update = true
+							zp_get_items ( 0, 0, $instance, zp_params, $fromScratch );
+						});
 					}
 					else
 					{
-						if ( zp_params.zpYear && zp_params.zpYear.indexOf(",") != -1 )
+						// Handle authors:
+						if ( zp_params.zpAuthor 
+								&& zp_params.zpAuthor.indexOf(",") != -1 )
 						{
-							var tempYears = zp_params.zpYear.split(",");
+							var tempAuthors = zp_params.zpAuthor.split(",");
 
-							jQuery.each( tempYears, function (i, year)
+							// Handle inclusive authors: 
+							if ( zp_params.zpInclusive == true )
 							{
-								zp_params.zpYear = year;
-								zp_get_items ( 0, 0, $instance, zp_params, false );
-							});
+								jQuery.each( tempAuthors, function (i, author)
+								{
+									zp_params.zpAuthor = author;
+
+									// params: request_start, request_last, $instance, params, update
+									// TEST: changed update = true
+									zp_get_items ( 0, 0, $instance, zp_params, $fromScratch );
+								});
+							}
+							else // exclusive
+							{
+								// params: request_start, request_last, $instance, params, update
+								// TEST: changed update = true
+								zp_get_items ( 0, 0, $instance, zp_params, $fromScratch );
+							}
 						}
-						else // NORMAL, no multiples
+						else
 						{
-							zp_get_items ( 0, 0, $instance, zp_params, false );
+							// Handle years:
+							if ( zp_params.zpYear 
+									&& zp_params.zpYear.indexOf(",") != -1 )
+							{
+								var tempYears = zp_params.zpYear.split(",");
+
+								jQuery.each( tempYears, function (i, year)
+								{
+									zp_params.zpYear = year;
+
+									// params: request_start, request_last, $instance, params, update
+									// TEST: changed update = true
+									zp_get_items ( 0, 0, $instance, zp_params, $fromScratch );
+								});
+							}
+							else // NORMAL, no multiples, no nothin'
+							{
+								// params: request_start, request_last, $instance, params, update
+								// TEST: changed update = true
+								zp_get_items ( 0, 0, $instance, zp_params, $fromScratch );
+							}
 						}
 					}
 				}
-			}
+			// }
 			// zp_params = JSON.stringify(zp_params);
 		});
+
 	} // Zotpress Bibliography
 
 
@@ -119,12 +169,14 @@ jQuery(document).ready(function()
 	// Get list items:
 	function zp_get_items ( request_start, request_last, $instance, params, update )
 	{
+		console.log('zp: calling zp_get_items with update check?', update);
+		console.log('zp: is an update needed?', params.zpUpdateNeeded);
+		
 		if ( typeof(request_start) === "undefined" || request_start == "false" || request_start == "" )
 			request_start = 0;
 
 		if ( typeof(request_last) === "undefined" || request_last == "false" || request_last == "" )
 			request_last = 0;
-
 
 		jQuery.ajax(
 		{
@@ -141,7 +193,10 @@ jQuery(document).ready(function()
 				'collection_id': params.zpCollectionId,
 				'tag_id': params.zpTagId,
 
-				'author': encodeURI(params.zpAuthor).replace("'","%27"),
+				// 'author': encodeURI(params.zpAuthor).replace("'","%27"),
+				// 'author': params.zpAuthor.toString().replace("\\","%5C"),
+				'author': params.zpAuthor,
+				// 'author': params.zpAuthor.toString().replace("'","&#39;"),
 				'year': params.zpYear,
 				'style': params.zpStyle,
 				'limit': params.zpLimit,
@@ -163,6 +218,7 @@ jQuery(document).ready(function()
 				'order': jQuery(".ZP_ORDER", $instance).text(),
 
 				'update': update,
+				'request_update': params.zpUpdateNeeded,
 				'request_start': request_start,
 				'request_last': request_last,
 				'zpShortcode_nonce': zpShortcodeAJAX.zpShortcode_nonce
@@ -173,10 +229,12 @@ jQuery(document).ready(function()
 			success: function(data)
 			{
 				var zp_items = jQuery.parseJSON( data );
-
+				
 				// Account for Zotero errors
 				// QUESTION: Did something change? Now have to ref [0]
-				if ( zp_items.status == 'empty'
+				// 7.3.10: CHECK: Added 'error' status check
+				if ( zp_items.status == 'error'
+						|| zp_items.status == 'empty'
 			 			|| zp_items.data == 'Not found' )
 				{
 					var zp_msg = zpShortcodeAJAX.txt_zperror + " ";
@@ -190,7 +248,7 @@ jQuery(document).ready(function()
 						zp_msg += zp_items.data;
 					}
 
-					console.log( "Zotpress: " + zp_msg );
+					console.log( "zp: Zotpress message: " + zp_msg );
 
 					// Hide errors if something shown
 					var hideErrMsg = '';
@@ -206,6 +264,16 @@ jQuery(document).ready(function()
 				// Success! Process as items
 				else
 				{
+					// 7.4: Major change to passing and parsing bib HTML
+					jQuery.each( zp_items.data, function (i, ic) {
+						var ic_decode = new DOMParser().parseFromString(ic.bib, "text/html");
+						zp_items.data[i].bib = ic_decode.documentElement.textContent;
+					});
+					
+					zp_totalItems += zp_items.data.length;
+					if ( update ) console.log("zp: running update for items:",zp_totalItems,"->",zp_items.data.length);
+					else console.log("zp: adding items:",zp_totalItems,"->",zp_items.data.length);
+
 					// First, remove any PHP SEO items that exist
 					jQuery("#"+zp_items.instance+" .zp-SEO-Content").remove();
 
@@ -363,7 +431,7 @@ jQuery(document).ready(function()
 
 
 						// Append cached/initial items to list:
-						if ( update === false )
+						// if ( update === false )
 							jQuery("#"+zp_items.instance+" .zp-List").append( tempItems );
 
 						// Append notes to container, if needed:
@@ -398,24 +466,32 @@ jQuery(document).ready(function()
 						// Re-sort, if needed
 						zp_bib_reformat( $instance, zp_items, params );
 
-						// Then, continue with other requests, if they exist
+						// Then, continue with other requests, if they exist:
 						if ( zp_items.meta.request_next != false
 								&& zp_items.meta.request_next != "false" )
 						{
+							// params: request_start, request_last, $instance, params, update
+							// TEST: kept update as var
 							zp_get_items ( zp_items.meta.request_next, zp_items.meta.request_last, $instance, params, update );
 						}
-						else // Otherwise, finish up the initial request(s)
+						else // Otherwise, finish up the initial request(s):
 						{
+							// Re-sort, if needed
+							// zp_bib_reformat( $instance, zp_items, params );
+
 							// Remove loading
 							jQuery("#"+zp_items.instance+" .zp-List").removeClass("loading");
 
-							// Check for updates
-							if ( ! jQuery("#"+zp_items.instance+" .zp-List").hasClass("updating") )
+							// Check for updates, if needed:
+							if ( zp_items.updateneeded )
 							{
+								console.log("zp: update needed");
+
+								params.zpUpdateNeeded = true;
 								zp_get_items ( 0, 0, $instance, params, true );
 							}
 
-							else // Otherwise, finish up and re-sort if needed
+							else // Or totally finish up and re-sort if needed:
 							{
 								// If multiple collections, then go to next
 								if ( zp_collections[params.zpBibIndex]
@@ -429,10 +505,20 @@ jQuery(document).ready(function()
 									jQuery("#"+zp_items.instance+" .zp-List").removeClass("updating");
 
 									// Start the item requests
-									zp_get_items ( 0, 0, $instance, params, false );
+									// params: request_start, request_last, $instance, params, update
+									// TEST: changed update to var from false
+									zp_get_items ( 0, 0, $instance, params, update );
 								}
-								else {
-									zp_bib_reformat( $instance, zp_items, params );
+								else
+								{
+									// TEST: We just reformatted, so let's not do it again
+									console.log("zp: done");
+									console.log("---");
+
+									// 7.3.14: Add class to indicate done updating
+									jQuery("#"+zp_items.instance+" .zp-List").addClass("done-updating");
+
+									// zp_bib_reformat( $instance, zp_items, params );
 								}
 							}
 						}
@@ -441,6 +527,8 @@ jQuery(document).ready(function()
 					// Message that there's no items
 					else
 					{
+						console.log("zp: done");
+
 						if ( update === true )
 						{
 							jQuery("#"+$instance.attr("id")+" .zp-List").removeClass("loading");
@@ -453,7 +541,7 @@ jQuery(document).ready(function()
 			},
 			error: function(errorThrown)
 			{
-                console.log("Zotpress via WP AJAX Error: ", errorThrown);
+                console.log("zp: Zotpress via WP AJAX Error: ", errorThrown);
 			}
 		});
 
@@ -462,6 +550,8 @@ jQuery(document).ready(function()
 
 	function zp_bib_reformat( $instance, zp_items, zp_params )
 	{
+		console.log('zp: reformatting instance', zp_items.instance);
+
 		var sortby = jQuery(".ZP_SORTBY", $instance).text();
 		var orderby = jQuery(".ZP_ORDER", $instance).text();
 
@@ -544,7 +634,8 @@ jQuery(document).ready(function()
 					'tvBroadcast',
 					'videoRecording',
 					'attachment',
-					'note'
+					'note',
+					'preprint'
 				];
 
 				// Then, remove any that aren't in the existing array
@@ -620,11 +711,14 @@ jQuery(document).ready(function()
 			}); // each orderedType
 		} // Titles situation
 
-	} // function zp_bib_reformat
+	} // function zp_bib_reformat()
 
 
+	// Used by zp_bib_reformat()
 	function typicalSort( zp_items, sortby, sortOrder, orderby )
 	{
+		console.log('zp: running typical sort for instance ', zp_items.instance);
+
 		// Re-sort if not numbered and sorting by author or date
 		if ( ['author', 'date'].indexOf(sortby) !== -1
 				&& jQuery('#'+zp_items.instance+' .zp-List .csl-left-margin').length == 0 )
@@ -651,6 +745,5 @@ jQuery(document).ready(function()
 				}).detach().appendTo( '#'+zp_items.instance+' .zp-List' );
 		}
 	}
-
 
 });
