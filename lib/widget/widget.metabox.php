@@ -8,7 +8,7 @@
 
 		<?php
 
-		if ($wpdb->get_var("SELECT COUNT(*) FROM ".$wpdb->prefix."zotpress;") > 1)
+		if ($wpdb->get_var("SELECT COUNT(*) FROM ".$wpdb->prefix."zotpress;") >= 1)
 		{
 			// See if default exists
 			$zp_default_account = false;
